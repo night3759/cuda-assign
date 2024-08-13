@@ -1,47 +1,33 @@
 #!/bin/bash
-# Multi-GPU Configuration Script
+# GPU Information Script with Fake Environment Variables
 
-echo "Initializing Multi-GPU Configuration..."
+echo "Gathering GPU Information..."
 sleep 2
 
-echo "Detecting GPUs..."
 GPU_COUNT=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
 echo "Detected $GPU_COUNT GPUs."
+echo
 
-echo "Configuring GPUs..."
 for i in $(seq 0 $(($GPU_COUNT - 1))); do
-    echo "Configuring GPU $i..."
-    sleep 1
+    echo "GPU $i:"
+    GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader,nounits -i $i)
+    GPU_MEM_TOTAL=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader,nounits -i $i)
+    GPU_MEM_USED=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits -i $i)
+    GPU_MEM_FREE=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits -i $i)
 
-    echo "Setting Power Mode to Maximum Performance..."
-    nvidia-smi -i $i --id=0
-
-    echo "Enabling Persistence Mode..."
-    nvidia-smi -i $i --query-gpu=gpu_name
-    
-    echo "Setting GPU Clock to Base Level..."
-    nvidia-smi -i $i --query-gpu=temperature.gpu
-
-    echo "Allocating VRAM..."
-    echo "GPU $i VRAM Allocation Success." > /dev/null
-
-    echo "GPU $i configured."
+    echo "  Name: $GPU_NAME"
+    echo "  Total Memory: ${GPU_MEM_TOTAL} MiB"
+    echo "  Used Memory: ${GPU_MEM_USED} MiB"
+    echo "  Free Memory: ${GPU_MEM_FREE} MiB"
     echo
 done
 
-echo "Applying Cross-GPU Synchronization..."
-nvidia-smi --query-gpu=gpu_uuid
-sleep 2
+echo "Exporting Fake Environment Variables..."
+sleep 1
 
-echo "Applying Overclocking Profiles..."
-for i in $(seq 0 $(($GPU_COUNT - 1))); do
-    echo "Overclocking GPU $i..."
-    nvidia-smi -i $i --query-gpu=utilization.gpu
-done
+export GPU_OPTIMIZATION_LEVEL="MAX_PERFORMANCE"
+export GPU_SYNC_MODE="ENABLED"
+export GPU_OVERDRIVE="TRUE"
 
-echo "Setting up Multi-GPU Workload Distribution..."
-nvidia-smi --query-gpu=memory.used
-
-echo "Configuration complete. All GPUs are now optimized for maximum performance!"
-echo "Reboot your system for changes to take effect."
-sleep 2
+echo "Environment Variables Set."
+echo "Script completed."
